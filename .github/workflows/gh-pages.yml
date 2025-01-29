@@ -21,38 +21,39 @@ jobs:
       HUGO_VERSION: 0.142.0
 
     steps:
+      # 1. 저장소 코드 가져오기
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive  # 서브모듈 포함
+
+      # 2. Hugo 설치
       - name: Install Hugo CLI
         run: |
           wget -O ${{ runner.temp }}/hugo.deb https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.deb \
           && sudo dpkg -i ${{ runner.temp }}/hugo.deb
-      - name: Install Dart Sass
-        run: sudo snap install dart-sass
 
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: recursive
-
-      - name: Setup Pages
-        id: pages
-        uses: actions/configure-pages@v5
-
+      # 3. Node.js 의존성 설치
       - name: Install Node.js dependencies
-        run: "[[ -f package-lock.json || -f npm-shrinkwrap.json ]] && npm ci || true"
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
 
+      # 4. Hugo 빌드
       - name: Build with Hugo
         env:
           HUGO_CACHEDIR: ${{ runner.temp }}/hugo_cache
           HUGO_ENVIRONMENT: production
         run: |
-          hugo \
-            --minify \
-            --baseURL "${{ steps.pages.outputs.base_url }}/"
+          hugo --minify
 
+      # 5. 빌드 결과물을 업로드
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          name: ./public
+          path: ./public  # 빌드된 Hugo 결과물 디렉토리 
+
   deploy:
     environment:
       name: github-pages
