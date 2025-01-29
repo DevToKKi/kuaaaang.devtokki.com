@@ -1,0 +1,40 @@
+name: GitHub Pages Deploy
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # GitHub Repository Checkout
+    - name: Checkout code 
+      uses: actions/checkout@v3
+
+    # Hugo Install
+    - name: Install Hugo 
+      uses: peaceiris/actions-hugo@v2
+      with:
+        hugo-version: 'v0.142.0' # 필요한 경우 안정된 이전 버전 사용 가능
+        extended: true
+
+    # Clean and Install Hugo Modules
+    - name: Clean Hugo modules
+      run: hugo mod clean
+
+    - name: Install Hugo modules
+      run: hugo mod tidy
+
+    # Hugo Build Run
+    - name: Build Hugo site
+      run: hugo --minify 
+
+    # Builded Site GitHub Pages Deploy
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        personal_token: ${{ secrets.PERSONAL_ACCESS_TOKEN}}
+        publish_dir: ./public
